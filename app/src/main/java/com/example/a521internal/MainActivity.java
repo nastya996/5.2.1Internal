@@ -1,16 +1,23 @@
 package com.example.a521internal;
 
+
+
 import androidx.appcompat.app.AppCompatActivity;
 
+
 import android.os.Bundle;
+
 import android.view.View;
+
 import android.widget.EditText;
+
 import android.widget.Toast;
 
-import java.io.BufferedInputStream;
+
 import java.io.BufferedReader;
+
+
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -18,111 +25,119 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
+
 public class MainActivity extends AppCompatActivity {
-    private static final String LOGIN_FILE_NAME = "login";
-    private static final String PASSWORD_FILE_NAME = "password";
-    EditText editLogin;
-    EditText editPassword;
+    private EditText mEditLogin;
+    private EditText mEditPassword;
+
+    private final String experience = "exp";
+    private final int AUTH_EXPERIENCE = 10;
+   private int experience_counter;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        editLogin = findViewById(R.id.editLogin);
-        editPassword = findViewById(R.id.editPassword);
 
-        findViewById(R.id.btnRegistration).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onClickRegistration(v);
-            }
-        });
+        initView();
+
+        if (savedInstanceState != null) {
+            experience_counter = savedInstanceState.getInt(experience);
+        } else {
+            experience_counter = 1;
+        }
+    }
+
+    private void initView() {
+        mEditLogin = findViewById(R.id.editLogin);
+        mEditPassword = findViewById(R.id.editPassword);
 
         findViewById(R.id.btnLogin).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                try {
-                    onClickLogin(v);
-                } catch (IOException e) {
-                    e.printStackTrace();
+            public void onClick(View view) {
+                if (inputCorrect()) {
+                    checkData();
+                } else {
+                    Toast.makeText(getApplicationContext(), getString(R.string.incorrect_input_message), Toast.LENGTH_LONG).show();
+
                 }
             }
         });
 
 
+        findViewById(R.id.btnRegistration).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (inputCorrect()) {
+                    saveData();
+                } else {
+                    Toast.makeText(getApplicationContext(), getString(R.string.incorrect_input_message), Toast.LENGTH_LONG).show();
+
+                }
+            }
+        });
     }
 
-    public void onClickLogin(View view) throws IOException{
-
-        String savedLogin = readSavedData(LOGIN_FILE_NAME);
-        String savedPassword = readSavedData(PASSWORD_FILE_NAME);
-
-        if (editLogin.getText().toString().equals(savedLogin) && editPassword.getText().toString().equals(savedPassword))
-        {
-            Toast.makeText(this, "Верный логин и пароль", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Неверный логин или пароль", Toast.LENGTH_SHORT).show();
-        }
-
+    private boolean inputCorrect() {
+        return !mEditLogin.getText().toString().equals("")
+                && !mEditPassword.getText().toString().equals("");
     }
 
-    private String readSavedData(String fileName) {
-        FileInputStream fileInputStream = null;
+    private void checkData() {
+        String ofn = mEditLogin.getText().toString().hashCode() + ".data";
         try {
-            fileInputStream = openFileInput(fileName);
+            FileInputStream authFile = openFileInput(ofn);
+            InputStreamReader reader = new InputStreamReader(authFile);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+
+            int hashedPassword = Integer.valueOf(bufferedReader.readLine());
+
+            bufferedReader.close();
+            reader.close();
+
+            if (mEditPassword.getText().toString().hashCode() == hashedPassword) {
+                Toast.makeText(getApplicationContext(), getString(R.string.auth_message), Toast.LENGTH_LONG).show();
+
+            } else {
+                userNotAuth();
+            }
+
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-        BufferedReader reader = new BufferedReader(inputStreamReader);
-        try {
-            return reader.readLine();
+            userNotAuth();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
+    private void userNotAuth() {
+        Toast.makeText(getApplicationContext(), getString(R.string.no_auth_message), Toast.LENGTH_LONG).show();
 
-    public void onClickRegistration(View view) {
-        FileOutputStream fileLogins = null;
-        FileOutputStream fileLPassword = null;
-        if (editLogin.getText().equals("") || editPassword.getText().equals("")) {
-            Toast.makeText(this, "Введите логин и пароль", Toast.LENGTH_SHORT).show();
-        } else {
-            try {
-                fileLogins = openFileOutput(LOGIN_FILE_NAME, MODE_PRIVATE);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileLogins);
-            BufferedWriter bw = new BufferedWriter(outputStreamWriter);
-            try {
-                bw.write(editLogin.getText().toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+       experience_counter++;
+        if (experience_counter > AUTH_EXPERIENCE) {
+            Toast.makeText(getApplicationContext(), getString(R.string.auth_failed_toast_message), Toast.LENGTH_LONG).show();
 
-            try {
-                fileLPassword = openFileOutput(PASSWORD_FILE_NAME, MODE_PRIVATE);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            OutputStreamWriter outputStreamWriterPassword = new OutputStreamWriter(fileLPassword);
-            BufferedWriter bwp = new BufferedWriter(outputStreamWriterPassword);
-            try {
-                bwp.write(editPassword.getText().toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                bw.close();
-                bwp.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Toast.makeText(this, R.string.login_and_password_saved_successfully, Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
+
+    private void saveData() {
+        String afn = mEditLogin.getText().toString().hashCode() + ".data";
+        try {
+            FileOutputStream authFile = openFileOutput(afn, MODE_PRIVATE);
+            OutputStreamWriter writer = new OutputStreamWriter(authFile);
+            BufferedWriter bufferedWriter = new BufferedWriter(writer);
+
+            bufferedWriter.write(String.valueOf(mEditPassword.getText().toString().hashCode()));
+
+            bufferedWriter.close();
+            writer.close();
+            Toast.makeText(getApplicationContext(), getString(R.string.registration_message), Toast.LENGTH_LONG).show();
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
+

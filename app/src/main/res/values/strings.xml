@@ -2,7 +2,14 @@
     <string name="app_name">5.2.1 Internal</string>
     <string name="Password">Password</string>
     <string name="Login">Login</string>
-    <string name="btnRegistration">REGISTRATION</string>
-    <string name="btnLogin">LOGIN</string>
-    <string name="login_and_password_saved_successfully">Логин и пароль успешно сохранены</string>
+    <string name="login_button_text">Login</string>
+    <string name="registration_button_text">Registration</string>
+    <string name="incorrect_input_message">Неверные данные</string>
+    <string name="registration_message">Пользователь  зарегистрирован</string>
+    <string name="auth_message">Пользователь авторизован</string>
+    <string name="no_auth_message">неверный логин или пароль</string>
+    <string name="auth_failed_toast_message">Авторизация не удалась</string>
+    <string name="btnLogin">Login</string> />
+    <string name="btnRegistration">REGISTARATION</string> />
+
 </resources>
